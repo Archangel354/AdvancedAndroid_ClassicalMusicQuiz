@@ -17,8 +17,10 @@
 package com.example.android.classicalmusicquiz;
 
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
@@ -26,6 +28,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 
 import java.util.ArrayList;
 
@@ -40,6 +46,8 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
     private int mCurrentScore;
     private int mHighScore;
     private Button[] mButtons;
+    private SimpleExoPlayer mExoPlayer;
+    private SimpleExoPlayerView mPlayerView;
 
 
     @Override
@@ -48,7 +56,8 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_quiz);
 
         // TODO (2): Replace the ImageView with the SimpleExoPlayerView, and remove the method calls on the composerView.
-        ImageView composerView = (ImageView) findViewById(R.id.composerView);
+// Initialize the player view.
+        mPlayerView = (SimpleExoPlayerView) findViewById(R.id.playerView);
 
         boolean isNewGame = !getIntent().hasExtra(REMAINING_SONGS_KEY);
 
@@ -70,8 +79,9 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
         mAnswerSampleID = QuizUtils.getCorrectAnswerID(mQuestionSampleIDs);
 
         // TODO (3): Replace the default artwork in the SimpleExoPlayerView with the question mark drawable.
-        // Load the image of the composer for the answer into the ImageView.
-        composerView.setImageBitmap(Sample.getComposerArtBySampleID(this, mAnswerSampleID));
+        // Load the question mark as the background image until the user answers the question.
+        mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
+                (getResources(), R.drawable.question_mark));
 
         // If there is only one answer left, end the game.
         if (mQuestionSampleIDs.size() < 2) {
@@ -84,7 +94,15 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
 
         // TODO (4): Create a Sample object using the Sample.getSampleByID() method and passing in mAnswerSampleID;
         // TODO (5): Create a method called initializePlayer() that takes a Uri as an argument and call it here, passing in the Sample URI.
+        Sample answerSample = Sample.getSampleByID(this, mAnswerSampleID);
+        if (answerSample == null) {
+            Toast.makeText(this, getString(R.string.sample_not_found_error),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        // Initialize the player.
+        initializePlayer(Uri.parse(answerSample.getUri()));
         }
 
 
